@@ -13,6 +13,17 @@ spec:
       labels:
         app: dash
     spec:
+      initContainers:
+      - name: init-git
+        image: alpine/git:latest
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: init-script
+          mountPath: "/scripts"
+        - name: data
+          mountPath: /data
+        command: [ "sh", "-c", "chmod +x /scripts/init_dashboard_version.sh && /scripts/init_dashboard_version.sh /data" ]
       containers:
       - name: container
         image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/ded/dash:$(Build.BuildId)
@@ -20,5 +31,16 @@ spec:
         - containerPort: 80
           name: web
         env:
-          - name: apikey
-            value: $(apikey)
+        - name: DASH_APIKEY
+          value: $(apikey)
+        - name: DASH_DATABASE_ROOT
+          value: /data
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: init-script
+        configMap:
+          name: init-script
+      - name: data
+        emptyDir: {}
