@@ -26,13 +26,11 @@ namespace Dash.Infrastructure
             return File.ReadAllText(path);
         }
 
-
         public IEnumerable<string> ReadLines(string path)
         {
             path = Path.Combine(RootPath, path);
 
             return File.ReadLines(path);
         }
-
     }
 }

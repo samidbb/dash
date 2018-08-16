@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Dash.Infrastructure;
 
@@ -6,31 +5,21 @@ namespace Dash.Tests.TestDoubles
 {
     public class StubFileSystem : IFileSystem
     {
-        private readonly Func<string> _nextFile;
+        private readonly string _file;
 
-        public StubFileSystem(params string[] files)
+        public StubFileSystem(string file)
         {
-            var i = 0;
-
-            _nextFile = () =>
-            {
-                if (i > files.Length - 1)
-                {
-                    return null;
-                }
-
-                return files[i++];
-            };
+            _file = file;
         }
 
         public string ReadAllText(string path)
         {
-            return _nextFile();
+            return _file;
         }
 
         public IEnumerable<string> ReadLines(string path)
         {
-            return _nextFile().Split('\n');
+            return _file.Split('\n');
         }
     }
 }
