@@ -1,7 +1,7 @@
-﻿using Dash.Infrastructure;
+﻿using Dash.Infrastructure.Configuration;
 using Xunit;
 
-namespace Dash.Tests
+namespace Dash.Tests.Infrastructure.Configuration
 {
     public class TestMarkdownParser
     {
