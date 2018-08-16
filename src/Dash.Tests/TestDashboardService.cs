@@ -1,5 +1,7 @@
 ﻿using System;
-using Dash.Infrastructure;
+using Dash.Domain;
+using Dash.Infrastructure.Configuration;
+using Dash.Infrastructure.Versioning;
 using Dash.Tests.TestDoubles;
 using Xunit;
 
@@ -11,13 +13,13 @@ namespace Dash.Tests
         public void Test1()
         {
             var stubVersion = new StubFileSystem(
-                $"{DashboardVersionRepository.Headers}\n" +
+                $"{FileVersionRepository.Headers}\n" +
                 "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
             );
             var stubSettings = new StubFileSystem("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n|A|aws-account-billing.json|C|x|x||");
             var stubContent = new StubFileSystem("{}");
-            var dashboardVersionRepository = new DashboardVersionRepository(stubVersion);
-            var dashboardSettingsRepository = new DashboardSettingsRepository(stubSettings);
+            var dashboardVersionRepository = new FileVersionRepository(stubVersion);
+            var dashboardSettingsRepository = new DashboardConfigurationRepository(stubSettings);
             var sut = new DashboardService(dashboardVersionRepository, dashboardSettingsRepository, stubContent);
 
             var dashboards = sut.GetDashboards();
