@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dash
+  namespace: $(kubernetes-namespace)
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dash
+  template:
+    metadata:
+      labels:
+        app: dash
+    spec:
+      containers:
+      - name: container
+        image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/ded/dash:$(Build.BuildId)
+        ports:
+        - containerPort: 80
+          name: web
+        env:
+          - name: apikey
+            value: $(apikey)

@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: dash
+  namespace: $(kubernetes-namespace)
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.frontend.rule.type: PathPrefixStrip
+spec:
+  rules:
+  - host: api.dfds.cloud
+    http:
+      paths:
+      - path: /dash
+        backend:
+          serviceName: dash
+          servicePort: external
