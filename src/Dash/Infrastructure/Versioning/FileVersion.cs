@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Dash.Infrastructure
+namespace Dash.Infrastructure.Versioning
 {
-    public class DashboardVersion
+    public class FileVersion
     {
         public string Entry { get; set; }
         public string Hash { get; set; }
@@ -23,83 +23,75 @@ namespace Dash.Infrastructure
         }
     }
 
-    public class DashboardVersionBuilder
+    public class FileVersionBuilder
     {
-        private string _entry;
+        private string _entry = "";
+        private string _hash = "";
+        private string _authorName = "";
+        private string _authorEmail = "";
+        private DateTime _authorDate = DateTime.MinValue;
+        private string _committerName = "";
+        private string _committerEmail = "";
+        private DateTime _committerDate = DateTime.MinValue;
+        private string _message = "";
 
-        public DashboardVersionBuilder WithEntry(string entry)
+        public FileVersionBuilder WithEntry(string entry)
         {
             _entry = entry;
             return this;
         }
 
-        private string _hash;
-
-        public DashboardVersionBuilder WithHash(string hash)
+        public FileVersionBuilder WithHash(string hash)
         {
             _hash = hash;
             return this;
         }
 
-        private string _authorName;
-
-        public DashboardVersionBuilder WithAuthorName(string authorName)
+        public FileVersionBuilder WithAuthorName(string authorName)
         {
             _authorName = authorName;
             return this;
         }
 
-        private string _authorEmail;
-
-        public DashboardVersionBuilder WithAuthorEmail(string authorEmail)
+        public FileVersionBuilder WithAuthorEmail(string authorEmail)
         {
             _authorEmail = authorEmail;
             return this;
         }
 
-        private DateTime _authorDate;
-
-        public DashboardVersionBuilder WithAuthorDate(DateTime authorDate)
+        public FileVersionBuilder WithAuthorDate(DateTime authorDate)
         {
             _authorDate = authorDate;
             return this;
         }
 
-        private string _committerName;
-
-        public DashboardVersionBuilder WithCommitterName(string committerName)
+        public FileVersionBuilder WithCommitterName(string committerName)
         {
             _committerName = committerName;
             return this;
         }
 
-        private string _committerEmail;
-
-        public DashboardVersionBuilder WithCommitterEmail(string committerEmail)
+        public FileVersionBuilder WithCommitterEmail(string committerEmail)
         {
             _committerEmail = committerEmail;
             return this;
         }
 
-        private DateTime _committerDate;
-
-        public DashboardVersionBuilder WithCommitterDate(DateTime committerDate)
+        public FileVersionBuilder WithCommitterDate(DateTime committerDate)
         {
             _committerDate = committerDate;
             return this;
         }
 
-        private string _message;
-
-        public DashboardVersionBuilder WithMessage(string message)
+        public FileVersionBuilder WithMessage(string message)
         {
             _message = message;
             return this;
         }
 
-        public DashboardVersion Build()
+        public FileVersion Build()
         {
-            return new DashboardVersion
+            return new FileVersion
             {
                 Entry = _entry,
                 Hash = _hash,
@@ -113,27 +105,27 @@ namespace Dash.Infrastructure
             };
         }
 
-        public static implicit operator DashboardVersion(DashboardVersionBuilder builder)
+        public static implicit operator FileVersion(FileVersionBuilder builder)
         {
             return builder.Build();
         }
     }
 
-    public class DashboardVersionRepository
+    public class FileVersionRepository
     {
-        public const string DashboardVersionCsvFileName = "dashboard_version.csv";
+        public const string FileVersionCsvFileName = "dashboard_version.csv";
         public const string Headers = "entry;hash;author_name;author_email;author_date;committer_name;committer_email;committer_date;message";
 
         private readonly IFileSystem _fileSystem;
 
-        public DashboardVersionRepository(IFileSystem fileSystem)
+        public FileVersionRepository(IFileSystem fileSystem)
         {
             _fileSystem = fileSystem;
         }
 
-        public IEnumerable<DashboardVersion> GetDashboardVersionList()
+        public IEnumerable<FileVersion> GetFileVersionList()
         {
-            var lines = _fileSystem.ReadLines(DashboardVersionCsvFileName).ToList();
+            var lines = _fileSystem.ReadLines(FileVersionCsvFileName).ToList();
             if (lines.Count < 2)
             {
                 yield break;
@@ -152,7 +144,7 @@ namespace Dash.Infrastructure
                     continue;
                 }
 
-                yield return new DashboardVersionBuilder()
+                yield return new FileVersionBuilder()
                     .WithEntry(tokens[0])
                     .WithHash(tokens[1])
                     .WithAuthorName(tokens[2])
