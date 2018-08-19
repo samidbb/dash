@@ -1,4 +1,8 @@
 ﻿using System.Collections.Generic;
+using Dash.Domain;
+using Dash.Infrastructure;
+using Dash.Infrastructure.Configuration;
+using Dash.Infrastructure.Versioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +27,16 @@ namespace Dash
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var settings = new Settings();            
+            Configuration.Bind("DASH", settings);
+            
+            services.AddSingleton(settings);
+            
+            services.AddTransient<IFileSystem, FileSystem>();
+            services.AddTransient<DashboardService>();
+            services.AddTransient<FileVersionRepository>();
+            services.AddTransient<DashboardConfigurationRepository>();
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -43,6 +57,11 @@ namespace Dash
             //app.UseHttpsRedirection();
             app.UseMvc();
         }
+    }
+    
+    public class Settings
+    {
+        public string Root { get; set; }
     }
 
     public static class SwaggerDocumentationExtensions

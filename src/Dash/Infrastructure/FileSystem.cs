@@ -11,24 +11,24 @@ namespace Dash.Infrastructure
 
     public class FileSystem : IFileSystem
     {
-        private const string RootPath = @"/Users/twf/projects/dfds/ded-grafana-dashboards";
-//        private const string RootPath = @"/projects/ded/ded-grafana-dashboards";
+        private readonly string _rootPath;
 
-        public static IFileSystem Create()
+        public FileSystem(Settings settings)
         {
-            return new FileSystem();
+            _rootPath = settings.Root;
         }
+        
 
         public string ReadAllText(string path)
         {
-            path = Path.Combine(RootPath, path);
+            path = Path.Combine(_rootPath, path);
 
             return File.ReadAllText(path);
         }
 
         public IEnumerable<string> ReadLines(string path)
         {
-            path = Path.Combine(RootPath, path);
+            path = Path.Combine(_rootPath, path);
 
             return File.ReadLines(path);
         }

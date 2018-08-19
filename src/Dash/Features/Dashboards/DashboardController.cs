@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Net;
+using Dash.Domain;
 using Microsoft.AspNetCore.Mvc;
 using NSwag.Annotations;
 
@@ -11,6 +13,13 @@ namespace Dash.Features.Dashboards
     [ApiController]
     public class DashboardController : ControllerBase
     {
+        private readonly DashboardService _dashboardService;
+
+        public DashboardController(DashboardService dashboardService)
+        {
+            _dashboardService = dashboardService;
+        }
+
         /// <summary>
         /// Returns all available dashboards
         /// </summary>
@@ -21,19 +30,18 @@ namespace Dash.Features.Dashboards
         [SwaggerResponse(HttpStatusCode.OK, typeof(DashboardList))]
         public virtual ActionResult<DashboardList> GetDashboards()
         {
+            var dashboards = _dashboardService.GetDashboards().ToList();
+
             return new DashboardList
             {
-                Items = new List<DashboardListItem>
+                Items = dashboards.Select(x => new DashboardListItem
                 {
-                    new DashboardListItem
-                    {
-                        Id = "DC668DB0-EDBA-4716-AB78-49F972B39261",
-                        Name = "dashboard.json",
-                        Team = "DED",
-                        LastModified = DateTime.Now
-                    }
-                },
-                TotalCount = 1
+                    Id = x.Id,
+                    Name = x.Name,
+                    Team = x.Team,
+                    LastModified = x.LastModified
+                }).ToList(),
+                TotalCount = dashboards.Count
             };
         }
 
@@ -49,13 +57,13 @@ namespace Dash.Features.Dashboards
         [SwaggerResponse(HttpStatusCode.NotFound, typeof(void))]
         public virtual IActionResult DashboardsIdGet([FromRoute] [Required] string id)
         {
-            return Ok(new DashboardListItem
+            var dashboard = _dashboardService.GetDashboards().SingleOrDefault(x => x.Id == id);
+            if (dashboard == null)
             {
-                Id = "DC668DB0-EDBA-4716-AB78-49F972B39261",
-                Name = "dashboard.json",
-                Team = "DED",
-                LastModified = DateTime.Now
-            });
+                return NotFound();
+            }
+
+            return Ok(dashboard);
         }
     }
 }
