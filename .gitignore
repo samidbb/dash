@@ -346,3 +346,6 @@ ASALocalRun/
 
 
 # End of https://www.gitignore.io/api/visualstudio,visualstudiocode
+
+output/
+get-pip.py
