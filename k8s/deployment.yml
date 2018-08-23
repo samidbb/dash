@@ -31,9 +31,9 @@ spec:
         - containerPort: 80
           name: web
         env:
-        - name: DASH_APIKEY
+        - name: DASH__APIKEY
           value: $(apikey)
-        - name: DASH_DATABASE_ROOT
+        - name: DASH__ROOT
           value: /data
         volumeMounts:
         - name: data

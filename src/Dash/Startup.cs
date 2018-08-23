@@ -28,6 +28,7 @@ namespace Dash
         public void ConfigureServices(IServiceCollection services)
         {
             var settings = new Settings();            
+
             Configuration.Bind("DASH", settings);
             
             services.AddSingleton(settings);
