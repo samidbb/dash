@@ -27,17 +27,17 @@ namespace Dash
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var settings = new Settings();            
+            var settings = new Settings();
 
             Configuration.Bind("DASH", settings);
-            
+
             services.AddSingleton(settings);
-            
+
             services.AddTransient<IFileSystem, FileSystem>();
             services.AddTransient<DashboardService>();
             services.AddTransient<FileVersionRepository>();
             services.AddTransient<DashboardConfigurationRepository>();
-            
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -59,7 +59,7 @@ namespace Dash
             app.UseMvc();
         }
     }
-    
+
     public class Settings
     {
         public string Root { get; set; }
