@@ -28,9 +28,13 @@ namespace Dash.Tests.Infrastructure.Configuration
         [InlineData("a|\n-\n", "a")]
         [InlineData("|a|b|c|\n|:--|:-:|--:|\n|1|2|3|", "a|b|c\n1|2|3")]
         [InlineData("|a|b|c|\n|:--|:-:|--:|\n||||", "a|b|c\n")]
-        public void Can_parse_markdown_table_to_csv(string input, string expectedOutput)
+        public void Can_parse_markdown_table_to_csv(string testInput, string expectedOutput)
         {
-            Assert.Equal(expectedOutput, string.Join('\n', MarkdownParser.ParseFirstMarkdownTableAsCsvLines(input.Split('\n'))));
+            var input = testInput.Split('\n');
+
+            var lines = MarkdownParser.ParseFirstMarkdownTableAsCsvLines(input);
+
+            Assert.Equal(expectedOutput, string.Join('\n', lines.Select(x => string.Join('|', x))));
         }
 
         [Theory]

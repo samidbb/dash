@@ -54,7 +54,7 @@ namespace Dash.Infrastructure.Configuration
          * Rule 10:
          * It is possible to have a single row header only
          */
-        public static IEnumerable<string> ParseFirstMarkdownTableAsCsvLines(IEnumerable<string> lines)
+        public static IEnumerable<string[]> ParseFirstMarkdownTableAsCsvLines(IEnumerable<string> lines)
         {
             using (var it = lines.GetEnumerator())
             {
@@ -64,7 +64,7 @@ namespace Dash.Infrastructure.Configuration
                     yield break;
                 }
 
-                yield return Trim(header);
+                yield return TrimAndSplit(header);
 
                 while (it.MoveNext())
                 {
@@ -74,7 +74,7 @@ namespace Dash.Infrastructure.Configuration
                         break;
                     }
 
-                    yield return Trim(line);
+                    yield return TrimAndSplit(line);
                 }
             }
         }
@@ -117,9 +117,9 @@ namespace Dash.Infrastructure.Configuration
             return null;
         }
 
-        private static string Trim(string input)
+        private static string[] TrimAndSplit(string input)
         {
-            return input.Trim(' ', '\t', ColumnSeparator);
+            return input.Trim(' ', '\t', ColumnSeparator).Split('|');
         }
 
         /// <remarks>

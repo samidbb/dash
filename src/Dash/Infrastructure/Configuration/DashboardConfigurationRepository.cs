@@ -28,9 +28,8 @@ namespace Dash.Infrastructure.Configuration
             var isHeaderOk = 0;
             var environments = new string[0];
 
-            foreach (var row in rows)
+            foreach (var items in rows)
             {
-                var items = row.Split('|');
                 if (items.Length < MandatoryHeader.Length)
                 {
                     throw new Exception("Too few columns");
