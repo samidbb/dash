@@ -118,12 +118,20 @@ namespace Dash.Infrastructure.Versioning
 
         private readonly IFileSystem _fileSystem;
 
+        private readonly Lazy<List<FileVersion>> _fileVersionList;
+        
         public FileVersionRepository(IFileSystem fileSystem)
         {
             _fileSystem = fileSystem;
+            _fileVersionList = new Lazy<List<FileVersion>>(() => LoadAllFileVersions().ToList());
         }
 
         public IEnumerable<FileVersion> GetFileVersionList()
+        {
+            return _fileVersionList.Value;
+        }
+
+        private IEnumerable<FileVersion> LoadAllFileVersions()
         {
             var lines = _fileSystem.ReadLines(FileVersionCsvFileName).ToList();
             if (lines.Count < 2)
@@ -155,6 +163,19 @@ namespace Dash.Infrastructure.Versioning
                     .WithCommitterDate(DateTime.Parse(tokens[7], CultureInfo.CurrentCulture, DateTimeStyles.AdjustToUniversal))
                     .WithMessage(tokens[8])
                     .Build();
+            }
+        }
+
+        public void Save(FileVersion fileVersion)
+        {
+            var index = _fileVersionList.Value.FindIndex(x => x.Entry==fileVersion.Entry);
+            if (index == -1)
+            {
+                _fileVersionList.Value.Add(fileVersion);
+            }
+            else
+            {
+                _fileVersionList.Value[index] = fileVersion;
             }
         }
     }
