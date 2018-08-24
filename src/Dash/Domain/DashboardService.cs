@@ -3,6 +3,8 @@ using System.Linq;
 using Dash.Infrastructure;
 using Dash.Infrastructure.Configuration;
 using Dash.Infrastructure.Versioning;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Dash.Domain
 {
@@ -19,7 +21,12 @@ namespace Dash.Domain
             _fileSystem = fileSystem;
         }
 
-        public IEnumerable<Dashboard> GetDashboards()
+        public Dashboard GetById(string id)
+        {
+            return GetAll().SingleOrDefault(x => x.Id == id);
+        }
+
+        public IEnumerable<Dashboard> GetAll()
         {
             var versionList = _fileVersionRepository.GetFileVersionList().ToList();
             var settingsList = _dashboardConfigurationRepository.GetAll().ToList();
@@ -33,9 +40,19 @@ namespace Dash.Domain
                     continue;
                 }
 
-                Signature author = new SignatureBuilder().WithName(version.AuthorName).WithEmail(version.AuthorEmail).WithDate(version.AuthorDate);
-                Signature committer = new SignatureBuilder().WithName(version.CommitterName).WithEmail(version.CommitterEmail).WithDate(version.CommitterDate);
-                DashboardMeta meta = new DashboardMetaBuilder().WithCommit(version.Hash).WithCommitMessage(version.Message).WithCommitter(committer).WithAuthor(author);
+                Signature author = new SignatureBuilder()
+                    .WithName(version.AuthorName)
+                    .WithEmail(version.AuthorEmail)
+                    .WithDate(version.AuthorDate);
+                Signature committer = new SignatureBuilder()
+                    .WithName(version.CommitterName)
+                    .WithEmail(version.CommitterEmail)
+                    .WithDate(version.CommitterDate);
+                DashboardMeta meta = new DashboardMetaBuilder()
+                    .WithCommit(version.Hash)
+                    .WithCommitMessage(version.Message)
+                    .WithCommitter(committer)
+                    .WithAuthor(author);
                 var content = _fileSystem.ReadAllText(version.Entry);
 
                 yield return new DashboardBuilder()
@@ -47,5 +64,16 @@ namespace Dash.Domain
                     .Build();
             }
         }
+
+        public bool Save(Dashboard dashboard)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public bool DeleteById(string id)
+        {
+            return true;
+        }
     }
+
 }

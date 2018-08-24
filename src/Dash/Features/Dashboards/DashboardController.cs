@@ -13,6 +13,8 @@ namespace Dash.Features.Dashboards
     [ApiController]
     public class DashboardController : ControllerBase
     {
+        private const string GetByIdRouteName = "GetDashboardById";
+
         private readonly DashboardService _dashboardService;
 
         public DashboardController(DashboardService dashboardService)
@@ -28,9 +30,9 @@ namespace Dash.Features.Dashboards
         [Route("/api/dashboards")]
         [SwaggerOperation("GetDashboards")]
         [SwaggerResponse(HttpStatusCode.OK, typeof(DashboardList))]
-        public virtual ActionResult<DashboardList> GetDashboards()
+        public ActionResult<DashboardList> GetDashboards()
         {
-            var dashboards = _dashboardService.GetDashboards().ToList();
+            var dashboards = _dashboardService.GetAll().ToList();
 
             return new DashboardList
             {
@@ -51,19 +53,28 @@ namespace Dash.Features.Dashboards
         /// <param name="id"></param>
         /// <response code="200">OK</response>
         [HttpGet]
-        [Route("/api/dashboards/{id}")]
-        [SwaggerOperation("GetDashboardById")]
+        [Route("/api/dashboards/{id}", Name = GetByIdRouteName)]
+        [SwaggerOperation(GetByIdRouteName)]
         [SwaggerResponse(HttpStatusCode.OK, typeof(DashboardDetails))]
         [SwaggerResponse(HttpStatusCode.NotFound, typeof(void))]
-        public virtual IActionResult DashboardsIdGet([FromRoute] [Required] string id)
+        public ActionResult<DashboardDetails> DashboardsIdGet([FromRoute] [Required] string id)
         {
-            var dashboard = _dashboardService.GetDashboards().SingleOrDefault(x => x.Id == id);
+            var dashboard = _dashboardService.GetById(id);
             if (dashboard == null)
             {
                 return NotFound();
             }
 
-            return Ok(dashboard);
+            var details = new DashboardDetails
+            {
+                Id = dashboard.Id,
+                Name = dashboard.Name,
+                Team = dashboard.Team,
+                LastModified = dashboard.LastModified,
+                Content = dashboard.Content.ToString()
+            };
+
+            return details;
         }
     }
 }
