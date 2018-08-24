@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Dash.Infrastructure.Configuration;
@@ -12,6 +13,7 @@ namespace Dash.Tests.Infrastructure.Configuration
     {
         [Theory]
         [InlineData("", 0)]
+        [InlineData("|Id|Name|Team", 0)]
         [InlineData("|Id|Name|Team|Env1|Env2|Env3|", 0)]
         [InlineData("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n", 0)]
         [InlineData("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n|A|B|C|x|x||", 1)]
@@ -39,8 +41,9 @@ namespace Dash.Tests.Infrastructure.Configuration
                     .WithId("A")
                     .WithName("B")
                     .WithTeam("C")
-                    .WithEnvironments("Env1", "Env2"),
-                actual: result);
+                    .WithEnvironments(("Env1", true), ("Env2", true), ("Env3", false)),
+                actual: result
+            );
         }
     }
 
@@ -83,7 +86,7 @@ namespace Dash.Tests.Infrastructure.Configuration
             AppendLine($"\t.{nameof(DashboardConfiguration.Id)}           = '{{0}}'", expected.Id, actual.Id);
             AppendLine($"\t.{nameof(DashboardConfiguration.Name)}         = '{{0}}'", expected.Name, actual.Name);
             AppendLine($"\t.{nameof(DashboardConfiguration.Team)}         = '{{0}}'", expected.Team, actual.Team);
-            AppendLine($"\t.{nameof(DashboardConfiguration.Environments)} = [{{0}}]", expected.Environments, actual.Environments, () => expected.Environments.SequenceEqual(actual.Environments), o => string.Join(",", (string[]) o));
+            AppendLine($"\t.{nameof(DashboardConfiguration.Environments)} = [{{0}}]", expected.Environments, actual.Environments, () => expected.Environments.SequenceEqual(actual.Environments), o => string.Join(",", (Dictionary<string,bool>) o));
 
             if (notEqual)
             {
