@@ -139,5 +139,24 @@ namespace Dash.Infrastructure.Configuration
 
             return isColumnDelimiter ? columns.Length : 0;
         }
+
+        public static IEnumerable<string> BuildMarkdownTable(IEnumerable<string[]> input)
+        {
+            string FormatOutput(string[] line)
+            {
+                return "|" + string.Join('|', line) + "|";
+            }
+
+            var headerOutputted = false;
+            foreach (var line in input)
+            {
+                yield return FormatOutput(line);
+                if (!headerOutputted)
+                {
+                    yield return FormatOutput(Enumerable.Repeat("-", line.Length).ToArray());
+                    headerOutputted = true;
+                }
+            }
+        }
     }
 }
