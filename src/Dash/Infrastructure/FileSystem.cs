@@ -7,8 +7,9 @@ namespace Dash.Infrastructure
     {
         string ReadAllText(string path);
         IEnumerable<string> ReadLines(string path);
-        void WriteAllText(string name, string content);
-        void WriteLines(string name, IEnumerable<string> content);
+        void WriteAllText(string path, string content);
+        void WriteLines(string path, IEnumerable<string> content);
+        void Delete(string path);
     }
 
     public class FileSystem : IFileSystem
@@ -34,18 +35,25 @@ namespace Dash.Infrastructure
             return File.ReadLines(path);
         }
 
-        public void WriteAllText(string name, string content)
+        public void WriteAllText(string path, string content)
         {
-            var path = Path.Combine(_rootPath, name);
+            path = Path.Combine(_rootPath, path);
 
             File.WriteAllText(path, content);
         }
 
-        public void WriteLines(string name, IEnumerable<string> content)
+        public void WriteLines(string path, IEnumerable<string> content)
         {
-            var path = Path.Combine(_rootPath, name);
+            path = Path.Combine(_rootPath, path);
 
             File.WriteAllLines(path, content);
+        }
+
+        public void Delete(string path)
+        {
+            path = Path.Combine(_rootPath, path);
+
+            File.Delete(path);
         }
     }
 }

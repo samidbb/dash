@@ -6,8 +6,9 @@ namespace Dash.Tests.TestDoubles
 {
     public class FakeFileSystem : IFileSystem
     {
-        public string WrittenName { get; private set; }
+        public string WrittenPath { get; private set; }
         public string WrittenContent { get; private set; }
+        public string DeletedPath { get; private set; }
 
         private readonly string _content;
 
@@ -30,16 +31,21 @@ namespace Dash.Tests.TestDoubles
             return _content.Split('\n');
         }
 
-        public void WriteAllText(string name, string content)
+        public void WriteAllText(string path, string content)
         {
-            WrittenName = name;
+            WrittenPath = path;
             WrittenContent = content;
         }
 
-        public void WriteLines(string name, IEnumerable<string> content)
+        public void WriteLines(string path, IEnumerable<string> content)
         {
-            WrittenName = name;
+            WrittenPath = path;
             WrittenContent = string.Join('\n', content);
+        }
+
+        public void Delete(string path)
+        {
+            DeletedPath = path;
         }
     }
 }

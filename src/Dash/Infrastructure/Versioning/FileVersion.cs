@@ -178,5 +178,14 @@ namespace Dash.Infrastructure.Versioning
                 _fileVersionList.Value[index] = fileVersion;
             }
         }
+
+        public void Remove(string entry)
+        {
+            var index = _fileVersionList.Value.FindIndex(x => x.Entry==entry);
+            if (index != -1)
+            {
+                _fileVersionList.Value.RemoveAt(index);
+            }
+        }
     }
 }

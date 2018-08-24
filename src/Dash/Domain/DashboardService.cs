@@ -105,7 +105,17 @@ namespace Dash.Domain
 
         public bool DeleteById(string id)
         {
-            return true;
+            var configurations = _dashboardConfigurationRepository.GetAll().ToList();
+            var map = configurations.ToDictionary(x => x.Id);
+            if (map.TryGetValue(id, out var dashboardConfiguration))
+            {
+                _fileVersionRepository.Remove(dashboardConfiguration.Name);
+                _dashboardConfigurationRepository.Remove(dashboardConfiguration.Id);
+                _fileSystem.Delete(dashboardConfiguration.Name);
+                return true;
+            }
+
+            return false;
         }
     }
 

@@ -10,6 +10,12 @@ namespace Dash.Tests.Infrastructure.Configuration
 {
     public class TestDashboardConfigurationRepository
     {
+        [Fact]
+        public void Has_correct_dashboard_configuration_filename()
+        {
+            Assert.Equal("DASHBOARDS.md", DashboardConfigurationRepository.DashboardConfigurationFileName);
+        }
+        
         [Theory]
         [InlineData("", 0)]
         [InlineData("|Id|Name|Team", 0)]
@@ -60,7 +66,7 @@ namespace Dash.Tests.Infrastructure.Configuration
 
             sut.Save(dashboardConfiguration);
 
-            Assert.Equal("DASHBOARDS.md", stub.WrittenName);
+            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, stub.WrittenPath);
             Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||", stub.WrittenContent);
         }
 
@@ -79,10 +85,33 @@ namespace Dash.Tests.Infrastructure.Configuration
 
             sut.Save(dashboardConfiguration);
 
-            Assert.Equal("DASHBOARDS.md", stub.WrittenName);
+            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, stub.WrittenPath);
             Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||\n|AA|B|C|||x|", stub.WrittenContent);
         }
 
+        [Fact]
+        public void Can_remove_dashboard()
+        {
+            var stub = new FakeFileSystem("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||");
+            var sut = new DashboardConfigurationRepository(stub);
+
+            bool removed = sut.Remove("A");
+
+            Assert.True(removed);
+            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, stub.WrittenPath);
+            Assert.Equal("|Id|Name|Team|\n|-|-|-|", stub.WrittenContent);
+        }
+
+        [Fact]
+        public void Will_not_save_when_trying_to_remove_a_non_existing_dashboard()
+        {
+            var stub = new FakeFileSystem("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||");
+            var sut = new DashboardConfigurationRepository(stub);
+
+            var removed = sut.Remove("AA");
+
+            Assert.False(removed);
+        }
     }
 
     internal static class DashboardConfigurationAssert

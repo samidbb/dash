@@ -114,6 +114,26 @@ namespace Dash.Tests.Infrastructure.Versioning
                 expected: dummy,
                 actual: result);
         }
+
+        [Fact]
+        public void Can_remove_file_version()
+        {
+            var stub = new FakeFileSystem(
+                $"{FileVersionRepository.Headers}\n" +
+                "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+            );
+            var sut = new FileVersionRepository(stub);
+
+            var dummy = A.FileVersion
+                .WithEntry("aws-account-billing.json")
+                .Build();
+
+            sut.Remove("aws-account-billing.json");
+
+            var result = sut.GetFileVersionList();
+
+            Assert.Empty(result);
+        }
     }
 
     internal static class FileVersionAssert

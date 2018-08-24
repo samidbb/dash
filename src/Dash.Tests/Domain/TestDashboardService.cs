@@ -54,15 +54,13 @@ namespace Dash.Tests.Domain
 
             sut.Save(dashboard);
 
-            Assert.Equal(dashboardName, spyContent.WrittenName);
+            Assert.Equal(dashboardName, spyContent.WrittenPath);
             Assert.Equal(dashboardContent, spyContent.WrittenContent);
         }
 
         [Fact]
         public void Can_save_dashboard_configuration()
         {
-            const string dashboardName = "DASHBOARDS.md";
-
             var dummyFileSystem = new FakeFileSystem();
             var spyContent = new FakeFileSystem();
             var dashboardVersionRepository = new FileVersionRepository(dummyFileSystem);
@@ -77,7 +75,7 @@ namespace Dash.Tests.Domain
 
             sut.Save(dashboard);
 
-            Assert.Equal(dashboardName, spyContent.WrittenName);
+            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, spyContent.WrittenPath);
             Assert.Equal("|Id|Name|Team|\n|-|-|-|\n|id|my-dashboard|my-team|", spyContent.WrittenContent);
         }
     }

@@ -6,6 +6,8 @@ namespace Dash.Infrastructure.Configuration
 {
     public class DashboardConfigurationRepository
     {
+        public const string DashboardConfigurationFileName = "DASHBOARDS.md";
+
         private static readonly string[] MandatoryHeaders = {"Id", "Name", "Team"};
 
         private readonly IFileSystem _fileSystem;
@@ -17,7 +19,7 @@ namespace Dash.Infrastructure.Configuration
 
         public IEnumerable<DashboardConfiguration> GetAll()
         {
-            var lines = _fileSystem.ReadLines("DASHBOARDS.md");
+            var lines = _fileSystem.ReadLines(DashboardConfigurationFileName);
             return ParseDashboardSettings(lines);
         }
 
@@ -89,7 +91,7 @@ namespace Dash.Infrastructure.Configuration
                 dashboardConfigurations.Add(dashboardConfiguration);
             }
 
-            _fileSystem.WriteLines("DASHBOARDS.md", CreateMarkdownTable(dashboardConfigurations));
+            _fileSystem.WriteLines(DashboardConfigurationFileName, CreateMarkdownTable(dashboardConfigurations));
         }
 
         private static IEnumerable<string> CreateMarkdownTable(List<DashboardConfiguration> dashboardConfigurations)
@@ -131,6 +133,22 @@ namespace Dash.Infrastructure.Configuration
             {
                 yield return environment.enabled ? "x" : "";
             }
+        }
+
+        public bool Remove(string id)
+        {
+            var dashboardConfigurations = GetAll().ToList();
+
+            var index = dashboardConfigurations.FindIndex(x => x.Id == id);
+
+            if (index != -1)
+            {
+                dashboardConfigurations.RemoveAt(index);
+                _fileSystem.WriteLines(DashboardConfigurationFileName, CreateMarkdownTable(dashboardConfigurations));
+                return true;
+            }
+
+            return false;
         }
     }
 }
