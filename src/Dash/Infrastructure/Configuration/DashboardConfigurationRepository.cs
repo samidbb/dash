@@ -6,7 +6,7 @@ namespace Dash.Infrastructure.Configuration
 {
     public class DashboardConfigurationRepository
     {
-        private static readonly string[] MandatoryHeader = {"Id", "Name", "Team"};
+        private static readonly string[] MandatoryHeaders = {"Id", "Name", "Team"};
 
         private readonly IFileSystem _fileSystem;
 
@@ -30,20 +30,20 @@ namespace Dash.Infrastructure.Configuration
 
             foreach (var items in rows)
             {
-                if (items.Length < MandatoryHeader.Length)
+                if (items.Length < MandatoryHeaders.Length)
                 {
                     throw new Exception("Too few columns");
                 }
 
                 if (isHeaderOk == 0)
                 {
-                    if (!MandatoryHeader.SequenceEqual(items.Take(3)))
+                    if (!MandatoryHeaders.SequenceEqual(items.Take(3)))
                     {
                         throw new Exception("Headers do not match");
                     }
 
                     isHeaderOk = items.Length;
-                    environments = items.Skip(MandatoryHeader.Length).ToArray();
+                    environments = items.Skip(MandatoryHeaders.Length).ToArray();
                     continue;
                 }
 
@@ -51,7 +51,7 @@ namespace Dash.Infrastructure.Configuration
                         .WithId(items[0])
                         .WithName(items[1])
                         .WithTeam(items[2])
-                        .WithEnvironments(BuildEnvironmentMap(items.Skip(MandatoryHeader.Length), environments).ToArray())
+                        .WithEnvironments(BuildEnvironmentMap(items.Skip(MandatoryHeaders.Length), environments).ToArray())
                     ;
             }
         }
@@ -70,6 +70,66 @@ namespace Dash.Infrastructure.Configuration
             {
                 yield return (environment: environments[i], enabled: false);
                 i++;
+            }
+        }
+
+        public void Save(DashboardConfiguration dashboardConfiguration)
+        {
+            var dashboardConfigurations = GetAll().ToList();
+
+            var i = dashboardConfigurations.FindIndex(x => x.Id == dashboardConfiguration.Id);
+            var newDashboardConfig = i == -1;
+
+            if (!newDashboardConfig)
+            {
+                dashboardConfigurations[i] = dashboardConfiguration;
+            }
+            else
+            {
+                dashboardConfigurations.Add(dashboardConfiguration);
+            }
+
+            _fileSystem.WriteLines("DASHBOARDS.md", CreateMarkdownTable(dashboardConfigurations));
+        }
+
+        private static IEnumerable<string> CreateMarkdownTable(List<DashboardConfiguration> dashboardConfigurations)
+        {
+            return MarkdownParser.BuildMarkdownTable(PrepareForMarkdown(dashboardConfigurations));
+        }
+
+        private static IEnumerable<string[]> PrepareForMarkdown(List<DashboardConfiguration> dashboardConfigurations)
+        {
+            yield return GetHeaders(dashboardConfigurations);
+
+            foreach (var dashboardConfiguration in dashboardConfigurations)
+            {
+                yield return GetLine(dashboardConfiguration).ToArray();
+            }
+        }
+
+        private static string[] GetHeaders(IEnumerable<DashboardConfiguration> dashboardConfigurations)
+        {
+            var configuration = dashboardConfigurations.FirstOrDefault();
+            if (configuration == null)
+            {
+                return MandatoryHeaders;
+            }
+
+            var tempList = MandatoryHeaders.ToList();
+            tempList.AddRange(configuration.Environments.Select(x => x.environment));
+
+            return tempList.ToArray();
+        }
+
+        private static IEnumerable<string> GetLine(DashboardConfiguration dashboardConfiguration)
+        {
+            yield return dashboardConfiguration.Id;
+            yield return dashboardConfiguration.Name;
+            yield return dashboardConfiguration.Team;
+
+            foreach (var environment in dashboardConfiguration.Environments)
+            {
+                yield return environment.enabled ? "x" : "";
             }
         }
     }

@@ -67,7 +67,10 @@ namespace Dash.Domain
 
         public bool Save(Dashboard dashboard)
         {
-            throw new System.NotImplementedException();
+
+            _fileSystem.WriteAllText(dashboard.Name, dashboard.Content);
+
+            return true;
         }
 
         public bool DeleteById(string id)

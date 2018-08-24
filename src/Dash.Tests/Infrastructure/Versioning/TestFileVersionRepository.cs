@@ -27,7 +27,7 @@ namespace Dash.Tests.Infrastructure.Versioning
         [InlineData(FileVersionRepository.Headers)]
         public void Can_parse_empty_version_entries(string input)
         {
-            var stub = new StubFileSystem(input);
+            var stub = new FakeFileSystem(input);
             var sut = new FileVersionRepository(stub);
 
             var dashboardMetaEntries = sut.GetFileVersionList();
@@ -38,7 +38,7 @@ namespace Dash.Tests.Infrastructure.Versioning
         [Fact]
         public void Can_parse_version_entries()
         {
-            var stub = new StubFileSystem(
+            var stub = new FakeFileSystem(
                 $"{FileVersionRepository.Headers}\n" +
                 "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
             );
@@ -52,7 +52,7 @@ namespace Dash.Tests.Infrastructure.Versioning
         [Fact]
         public void Can_parse_dashboard_version_entry()
         {
-            var stub = new StubFileSystem(
+            var stub = new FakeFileSystem(
                 $"{FileVersionRepository.Headers}\n" +
                 "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
             );

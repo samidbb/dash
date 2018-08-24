@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace Dash.Infrastructure.Configuration
+﻿namespace Dash.Infrastructure.Configuration
 {
     public class DashboardConfiguration
     {
-        public DashboardConfiguration(string id, string name, string team, IDictionary<string, bool> environments)
+        public DashboardConfiguration(string id, string name, string team, (string environment, bool enabled)[] environments)
         {
             Id = id;
             Name = name;
@@ -16,7 +13,7 @@ namespace Dash.Infrastructure.Configuration
         public string Id { get; }
         public string Name { get; }
         public string Team { get; }
-        public IDictionary<string, bool> Environments { get; }
+        public (string environment, bool enabled)[] Environments { get; }
     }
 
     public class DashboardConfigurationBuilder
@@ -24,7 +21,7 @@ namespace Dash.Infrastructure.Configuration
         private string _id = "";
         private string _name = "";
         private string _team = "";
-        private IDictionary<string, bool> _environments = new Dictionary<string, bool>();
+        private (string environment, bool enabled)[] _environments = new (string environment, bool enabled)[0];
 
         public DashboardConfigurationBuilder WithId(string id)
         {
@@ -46,7 +43,7 @@ namespace Dash.Infrastructure.Configuration
 
         public DashboardConfigurationBuilder WithEnvironments(params (string environment, bool enabled)[] environments)
         {
-            _environments = environments.ToDictionary(x => x.environment, x => x.enabled);
+            _environments = environments;
             return this;
         }
 
