@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using Dash.Domain;
+using Dash.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using NSwag.Annotations;
 
@@ -76,5 +75,84 @@ namespace Dash.Features.Dashboards
 
             return details;
         }
+
+        [HttpPost]
+        [Route("/api/dashboards")]
+        [SwaggerOperation("CreateDashboard")]
+        [SwaggerResponse(HttpStatusCode.Created, typeof(DashboardListItem))]
+        public IActionResult Post([FromBody] DashboardInput input)
+        {
+            var id = IdGenerator.Generate(input.Name + input.Team);
+
+            var dashboard = new DashboardBuilder()
+                .WithId(id)
+                .WithName(input.Name)
+                .WithTeam(input.Team)
+                .WithContent(input.Content)
+                .Build();
+
+            _dashboardService.Save(dashboard);
+
+            var details = new DashboardDetails
+            {
+                Id = dashboard.Id,
+                Name = dashboard.Name,
+                Team = dashboard.Team,
+                LastModified = dashboard.LastModified,
+                Content = dashboard.Content.ToString()
+            };
+
+            return CreatedAtRoute(GetByIdRouteName, new {id = dashboard.Id}, details);
+        }
+
+        [HttpPut]
+        [Route("/api/dashboards/{id}")]
+        [SwaggerOperation("CreateOrUpdateDashboard")]
+        [SwaggerResponse(HttpStatusCode.OK, typeof(DashboardListItem))]
+        [SwaggerResponse(HttpStatusCode.Created, typeof(DashboardListItem))]
+        public IActionResult Put([FromRoute] [Required] string id, [FromBody] DashboardInput input)
+        {
+            var dashboard = new DashboardBuilder()
+                .WithId(id)
+                .WithName(input.Name)
+                .WithTeam(input.Team)
+                .WithContent(input.Content)
+                .Build();
+
+            _dashboardService.Save(dashboard);
+
+            var details = new DashboardDetails
+            {
+                Id = dashboard.Id,
+                Name = dashboard.Name,
+                Team = dashboard.Team,
+                LastModified = dashboard.LastModified,
+                Content = dashboard.Content.ToString()
+            };
+
+            return CreatedAtRoute(GetByIdRouteName, new {id = dashboard.Id}, details);
+        }
+
+        [HttpDelete]
+        [Route("/api/dashboards/{id}")]
+        [SwaggerOperation("CreateOrUpdateDashboard")]
+        [SwaggerResponse(HttpStatusCode.OK, typeof(void))]
+        [SwaggerResponse(HttpStatusCode.NotFound, typeof(void))]
+        public IActionResult Delete([FromRoute] [Required] string id)
+        {
+            if (_dashboardService.DeleteById(id))
+            {
+                return Ok();
+            }
+
+            return NotFound();
+        }
+    }
+
+    public class DashboardInput
+    {
+        public string Name { get; set; }
+        public string Team { get; set; }
+        public string Content { get; set; }
     }
 }

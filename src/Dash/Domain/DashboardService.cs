@@ -1,10 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Dash.Infrastructure;
 using Dash.Infrastructure.Configuration;
 using Dash.Infrastructure.Versioning;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Dash.Domain
 {
@@ -29,9 +28,9 @@ namespace Dash.Domain
         public IEnumerable<Dashboard> GetAll()
         {
             var versionList = _fileVersionRepository.GetFileVersionList().ToList();
-            var settingsList = _dashboardConfigurationRepository.GetAll().ToList();
+            var configurations = _dashboardConfigurationRepository.GetAll().ToList();
 
-            var map = settingsList.ToDictionary(x => x.Name);
+            var map = configurations.ToDictionary(x => x.Name);
 
             foreach (var version in versionList)
             {
@@ -67,10 +66,41 @@ namespace Dash.Domain
 
         public bool Save(Dashboard dashboard)
         {
-
-            _fileSystem.WriteAllText(dashboard.Name, dashboard.Content);
+            SaveFileVersion(dashboard);
+            SaveDashboardConfiguration(dashboard);
+            SaveContent(dashboard);
 
             return true;
+        }
+
+        private void SaveContent(Dashboard dashboard)
+        {
+            _fileSystem.WriteAllText(dashboard.Name, dashboard.Content);
+        }
+
+        private void SaveFileVersion(Dashboard dashboard)
+        {
+            var now = DateTime.UtcNow;
+            var fileVersion = new FileVersionBuilder()
+                    .WithEntry(dashboard.Name)
+                    .WithAuthorDate(now)
+                    .WithCommitterDate(now)
+                    .Build()
+                ;
+
+            _fileVersionRepository.Save(fileVersion);
+        }
+
+        private void SaveDashboardConfiguration(Dashboard dashboard)
+        {
+            var dashboardConfiguration = new DashboardConfigurationBuilder()
+                    .WithId(dashboard.Id)
+                    .WithName(dashboard.Name)
+                    .WithTeam(dashboard.Team)
+                    .Build()
+                ;
+
+            _dashboardConfigurationRepository.Save(dashboardConfiguration);
         }
 
         public bool DeleteById(string id)

@@ -26,6 +26,8 @@ namespace Dash.Domain
 
     public class Content
     {
+        public static readonly Content Empty = new Content(new JObject());
+        
         private readonly JObject _embeddedDocument;
 
         private static Content Create(string json)
@@ -61,6 +63,10 @@ namespace Dash.Domain
     public class DashboardBuilder
     {
         private string _id;
+        private string _name;
+        private string _team;
+        private DashboardMeta _meta;
+        private Content _content = Content.Empty;
 
         public DashboardBuilder WithId(string id)
         {
@@ -68,7 +74,6 @@ namespace Dash.Domain
             return this;
         }
 
-        private string _name;
 
         public DashboardBuilder WithName(string name)
         {
@@ -76,7 +81,6 @@ namespace Dash.Domain
             return this;
         }
 
-        private string _team;
 
         public DashboardBuilder WithTeam(string team)
         {
@@ -84,7 +88,6 @@ namespace Dash.Domain
             return this;
         }
 
-        private DashboardMeta _meta;
 
         public DashboardBuilder WithMeta(DashboardMeta meta)
         {
@@ -92,7 +95,6 @@ namespace Dash.Domain
             return this;
         }
 
-        private Content _content;
 
         public DashboardBuilder WithContent(Content content)
         {
