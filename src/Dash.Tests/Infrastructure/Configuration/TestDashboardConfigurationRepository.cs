@@ -46,10 +46,14 @@ namespace Dash.Tests.Infrastructure.Configuration
 
             DashboardConfigurationAssert.Equal(
                 expected: A.DashboardConfiguration
-                    .WithId("A")
-                    .WithName("B")
-                    .WithTeam("C")
-                    .WithEnvironments(("Env1", true), ("Env2", true), ("Env3", false)),
+                    .WithId("Id1")
+                    .WithName("Name1")
+                    .WithTeam("Team1")
+                    .WithEnvironments(
+                        A.Environment.WithName("Env1").WithState(EnvironmentState.Enabled),
+                        A.Environment.WithName("Env2").WithState(EnvironmentState.Enabled),
+                        A.Environment.WithName("Env3")
+                    ),
                 actual: result
             );
         }
@@ -61,10 +65,13 @@ namespace Dash.Tests.Infrastructure.Configuration
             var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
 
             var dashboardConfiguration = A.DashboardConfiguration
-                .WithId("A")
-                .WithName("B")
-                .WithTeam("C")
-                .WithEnvironments(("Env1", true), ("Env2", true), ("Env3", false))
+                .WithId("Id1")
+                .WithName("NewName")
+                .WithTeam("NewTeam")
+                .WithEnvironments(
+                    A.Environment.WithName("Env1").WithState(EnvironmentState.Enabled),
+                    A.Environment.WithName("Env2").WithState(EnvironmentState.Enabled),
+                    A.Environment.WithName("Env3").WithState(EnvironmentState.Enabled))
                 .Build();
 
             sut.Save(dashboardConfiguration);
@@ -83,7 +90,10 @@ namespace Dash.Tests.Infrastructure.Configuration
                 .WithId("AA")
                 .WithName("B")
                 .WithTeam("C")
-                .WithEnvironments(("Env1", false), ("Env2", false), ("Env3", true))
+                .WithEnvironments(
+                    A.Environment.WithName("Env1"), 
+                    A.Environment.WithName("Env2"), 
+                    A.Environment.WithName("Env3").WithState(EnvironmentState.Enabled))
                 .Build();
 
             sut.Save(dashboardConfiguration);
