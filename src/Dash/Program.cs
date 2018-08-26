@@ -1,15 +1,19 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
 namespace Dash
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static readonly CancellationTokenSource Cts = new CancellationTokenSource();
+        
+        public static async Task Main(string[] args)
         {
-            CreateWebHostBuilder(args)
+            await CreateWebHostBuilder(args)
                 .Build()
-                .Run();
+                .RunAsync(Cts.Token);
         }
 
         private static IWebHostBuilder CreateWebHostBuilder(string[] args)
