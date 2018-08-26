@@ -1,7 +1,5 @@
 ﻿using System;
-using Dash.Domain;
 using Dash.Infrastructure;
-using Dash.Infrastructure.Configuration;
 using Dash.Infrastructure.Versioning;
 using Xunit;
 
@@ -12,27 +10,27 @@ namespace Dash.Tests.Domain
         [Fact]
         public void Can_build_dashboard_from_sources()
         {
-            var stubVersion = FileSystem.CreateNull(A.File.WithContent(
-                $"{FileVersionRepository.Headers}\n" +
-                "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
-            ));
-
-            var stubSettings = FileSystem.CreateNull(A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n|A|aws-account-billing.json|C|x|x||"));
-            var stubContent = FileSystem.CreateNull(A.File.WithContent("{\"id\": 1}"));
-            
-            
-            var dashboardVersionRepository = new FileVersionRepository(stubVersion);
-            var dashboardConfigurationRepository = new DashboardConfigurationRepository(stubSettings);
-            var sut = new DashboardService(dashboardVersionRepository, dashboardConfigurationRepository, stubContent);
+            var sut = A.DashboardService
+                .With(A.FileVersionRepository.With(FileSystem.CreateNull(A.File.WithContent(
+                        $"{FileVersionRepository.Headers}\n" +
+                        "e;h;an;ae;2018-08-08 10:10:36 +0100;cn;ce;2018-08-08 10:10:36 +0100;m"
+                    )))
+                )
+                .With(A.DashboardConfigurationRepository
+                    .With(FileSystem.CreateNull(
+                        A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n|Id1|e|Team1|x|x||")))
+                )
+                .With(FileSystem.CreateNull(A.File.WithContent("{\"id\": 1}")))
+                .Build();
 
             var dashboards = sut.GetAll();
 
             var dashboard = Assert.Single(dashboards);
 
             Assert.NotNull(dashboard);
-            Assert.Equal("A", dashboard.Id);
-            Assert.Equal("aws-account-billing.json", dashboard.Name);
-            Assert.Equal("C", dashboard.Team);
+            Assert.Equal("Id1", dashboard.Id);
+            Assert.Equal("e", dashboard.Name);
+            Assert.Equal("Team1", dashboard.Team);
             Assert.Equal(new DateTime(2018, 8, 8, 9, 10, 36, DateTimeKind.Utc), dashboard.LastModified);
             Assert.Equal("{}", dashboard.Content);
         }
@@ -43,12 +41,13 @@ namespace Dash.Tests.Domain
             const string dashboardName = "new-dashboard.json";
             const string dashboardContent = "{}";
 
-            var dummyFileSystem = FileSystem.CreateNull();
-            var file = A.File.Build();
-            var spyContent = FileSystem.CreateNull(file);
-            var dashboardVersionRepository = new FileVersionRepository(dummyFileSystem);
-            var dashboardConfigurationRepository = new DashboardConfigurationRepository(dummyFileSystem);
-            var sut = new DashboardService(dashboardVersionRepository, dashboardConfigurationRepository, spyContent);
+            var spy = A.File.Build();
+
+            var sut = A.DashboardService
+                .With(A.FileVersionRepository)
+                .With(A.DashboardConfigurationRepository)
+                .With(FileSystem.CreateNull(spy))
+                .Build();
 
             var dashboard = A.Dashboard
                 .WithName(dashboardName)
@@ -57,19 +56,20 @@ namespace Dash.Tests.Domain
 
             sut.Save(dashboard);
 
-//            Assert.Equal(dashboardName, spyContent.WrittenPath);
-            Assert.Equal(dashboardContent, file.Content);
+            Assert.Equal(dashboardContent, spy.Content);
         }
 
         [Fact]
         public void Can_save_dashboard_configuration()
         {
-            var dummyFileSystem = FileSystem.CreateNull();
-            var file = A.File.Build();
-            var spyContent = FileSystem.CreateNull(file);
-            var dashboardVersionRepository = new FileVersionRepository(dummyFileSystem);
-            var dashboardConfigurationRepository = new DashboardConfigurationRepository(spyContent);
-            var sut = new DashboardService(dashboardVersionRepository, dashboardConfigurationRepository, dummyFileSystem);
+            var spy = A.File.Build();
+            var sut = A.DashboardService
+                .With(A.FileVersionRepository)
+                .With(A.DashboardConfigurationRepository
+                    .With(FileSystem.CreateNull(spy))
+                )
+                .With(FileSystem.CreateNull())
+                .Build();
 
             var dashboard = A.Dashboard
                 .WithId("id")
@@ -79,8 +79,7 @@ namespace Dash.Tests.Domain
 
             sut.Save(dashboard);
 
-//            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, spyContent.WrittenPath);
-            Assert.Equal("|Id|Name|Team|\n|-|-|-|\n|id|my-dashboard|my-team|", file.Content);
+            Assert.Equal("|Id|Name|Team|\n|-|-|-|\n|id|my-dashboard|my-team|", spy.Content);
         }
     }
 }

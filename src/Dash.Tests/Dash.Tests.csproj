@@ -13,7 +13,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Dash\Dash.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="TestDoubles" />
-  </ItemGroup>
 </Project>

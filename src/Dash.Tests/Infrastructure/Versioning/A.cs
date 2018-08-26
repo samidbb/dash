@@ -1,5 +1,5 @@
 ﻿using Dash.Infrastructure.Versioning;
-using Dash.Tests.Infrastructure.Configuration;
+using Dash.Tests.TestBuilders;
 
 namespace Dash.Tests.Infrastructure.Versioning
 {
@@ -7,5 +7,6 @@ namespace Dash.Tests.Infrastructure.Versioning
     {
         public static FileVersionBuilder FileVersion => new FileVersionBuilder();
         public static FakeFileBuilder File => new FakeFileBuilder();
+        public static FileVersionRepositoryBuilder FileVersionRepository => new FileVersionRepositoryBuilder();
     }
 }
