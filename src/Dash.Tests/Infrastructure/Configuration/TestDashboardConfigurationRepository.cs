@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using Dash.Infrastructure;
 using Dash.Infrastructure.Configuration;
+using Dash.Tests.TestHelpers;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Dash.Tests.Infrastructure.Configuration
 {
@@ -59,13 +57,13 @@ namespace Dash.Tests.Infrastructure.Configuration
         }
 
         [Fact]
-        public void Can_replace_existing_dashboard()
+        public void Can_add_new_dashboard()
         {
-            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n|Id1|Name1|Team1|x|x||").Build();
+            var file = A.File.WithContent("").Build();
             var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
 
             var dashboardConfiguration = A.DashboardConfiguration
-                .WithId("Id1")
+                .WithId("NewId")
                 .WithName("NewName")
                 .WithTeam("NewTeam")
                 .WithEnvironments(
@@ -76,20 +74,40 @@ namespace Dash.Tests.Infrastructure.Configuration
 
             sut.Save(dashboardConfiguration);
 
-//            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, file.Path);
-            Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|Id1|NewName|NewTeam|x|x|x|", file.Content);
+            Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|NewId|NewName|NewTeam|x|x|x|", file.Content);
+        }
+
+        [Fact]
+        public void Can_replace_existing_dashboard()
+        {
+            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n|ExistingId|Name1|Team1|x|x||").Build();
+            var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
+
+            var dashboardConfiguration = A.DashboardConfiguration
+                .WithId("ExistingId")
+                .WithName("NewName")
+                .WithTeam("NewTeam")
+                .WithEnvironments(
+                    A.Environment.WithName("Env1").WithState(EnvironmentState.Enabled),
+                    A.Environment.WithName("Env2").WithState(EnvironmentState.Enabled),
+                    A.Environment.WithName("Env3").WithState(EnvironmentState.Enabled))
+                .Build();
+
+            sut.Save(dashboardConfiguration);
+
+            Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|ExistingId|NewName|NewTeam|x|x|x|", file.Content);
         }
 
         [Fact]
         public void Can_append_dashboard()
         {
-            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||").Build();
+            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|Id1|Name1|Team1|x|x||").Build();
             var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
 
             var dashboardConfiguration = A.DashboardConfiguration
-                .WithId("AA")
-                .WithName("B")
-                .WithTeam("C")
+                .WithId("NewId")
+                .WithName("NewName")
+                .WithTeam("NewTeam")
                 .WithEnvironments(
                     A.Environment.WithName("Env1"), 
                     A.Environment.WithName("Env2"), 
@@ -98,8 +116,7 @@ namespace Dash.Tests.Infrastructure.Configuration
 
             sut.Save(dashboardConfiguration);
 
-//            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, file.Path);
-            Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||\n|AA|B|C|||x|", file.Content);
+            Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|Id1|Name1|Team1|x|x||\n|NewId|NewName|NewTeam|||x|", file.Content);
         }
 
         [Fact]
@@ -108,10 +125,9 @@ namespace Dash.Tests.Infrastructure.Configuration
             var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||").Build();
             var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
 
-            bool removed = sut.Remove("A");
+            var wasRemoved = sut.Remove("A");
 
-            Assert.True(removed);
-//            Assert.Equal(DashboardConfigurationRepository.DashboardConfigurationFileName, file.Path);
+            Assert.True(wasRemoved);
             Assert.Equal("|Id|Name|Team|\n|-|-|-|", file.Content);
         }
 
@@ -120,64 +136,13 @@ namespace Dash.Tests.Infrastructure.Configuration
         {
             var sut = A.DashboardConfigurationRepository.With(
                 FileSystem.CreateNull(
-                    A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|A|B|C|x|x||")
+                    A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|Id1|Name1|Team1|x|x||")
                 )
             ).Build();
 
-            var removed = sut.Remove("AA");
+            var removed = sut.Remove("UnknownId");
 
             Assert.False(removed);
-        }
-    }
-
-    internal static class DashboardConfigurationAssert
-    {
-        public static void Equal(DashboardConfiguration expected, DashboardConfiguration actual)
-        {
-            if (Equals(expected, actual))
-            {
-                return;
-            }
-
-            Assert.NotNull(expected);
-            Assert.NotNull(actual);
-
-            StringBuilder CreateStringBuilder()
-            {
-                var sb = new StringBuilder();
-                sb.AppendLine($"{nameof(DashboardConfiguration)} with");
-                return sb;
-            }
-
-            var expectedText = CreateStringBuilder();
-            var actualText = CreateStringBuilder();
-            var notEqual = false;
-
-            void AppendLine<T>(string format, Func<DashboardConfiguration, T> selector, Func<bool> equal = null, Func<T, string> print = null)
-            {
-                var expectedValue = selector(expected);
-                var actualValue = selector(actual);
-
-                equal = equal ?? (() => Equals(expectedValue, actualValue));
-                print = print ?? (o => o.ToString());
-
-                if (!equal())
-                {
-                    notEqual = true;
-                    expectedText.AppendLine(string.Format(format, print(expectedValue)));
-                    actualText.AppendLine(string.Format(format, print(actualValue)));
-                }
-            }
-
-            AppendLine($"\t.{nameof(DashboardConfiguration.Id)}           = '{{0}}'", x => x.Id);
-            AppendLine($"\t.{nameof(DashboardConfiguration.Name)}         = '{{0}}'", x => x.Name);
-            AppendLine($"\t.{nameof(DashboardConfiguration.Team)}         = '{{0}}'", x => x.Team);
-            AppendLine($"\t.{nameof(DashboardConfiguration.Environments)} = [{{0}}]", x => x.Environments, () => expected.Environments.SequenceEqual(actual.Environments), o => string.Join(",", o.Select(x => x.ToString())));
-
-            if (notEqual)
-            {
-                throw new EqualException(expectedText, actualText);
-            }
         }
     }
 }
