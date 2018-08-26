@@ -33,7 +33,7 @@ namespace Dash
 
             services.AddSingleton(settings);
 
-            services.AddTransient<IFileSystem, FileSystem>();
+            services.AddTransient<FileSystem>();
             services.AddTransient<DashboardService>();
             services.AddTransient<FileVersionRepository>();
             services.AddTransient<DashboardConfigurationRepository>();

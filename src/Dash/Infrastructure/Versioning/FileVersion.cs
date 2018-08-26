@@ -116,11 +116,11 @@ namespace Dash.Infrastructure.Versioning
         public const string FileVersionCsvFileName = "dashboard_version.csv";
         public const string Headers = "entry;hash;author_name;author_email;author_date;committer_name;committer_email;committer_date;message";
 
-        private readonly IFileSystem _fileSystem;
+        private readonly FileSystem _fileSystem;
 
         private readonly Lazy<List<FileVersion>> _fileVersionList;
         
-        public FileVersionRepository(IFileSystem fileSystem)
+        public FileVersionRepository(FileSystem fileSystem)
         {
             _fileSystem = fileSystem;
             _fileVersionList = new Lazy<List<FileVersion>>(() => LoadAllFileVersions().ToList());
@@ -133,7 +133,7 @@ namespace Dash.Infrastructure.Versioning
 
         private IEnumerable<FileVersion> LoadAllFileVersions()
         {
-            var lines = _fileSystem.ReadLines(FileVersionCsvFileName).ToList();
+            var lines = _fileSystem.GetFile(FileVersionCsvFileName).ReadLines().ToList();
             if (lines.Count < 2)
             {
                 yield break;

@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
 using System.Text;
+using Dash.Infrastructure;
 using Dash.Infrastructure.Versioning;
-using Dash.Tests.TestDoubles;
+using Dash.Tests.Infrastructure.Configuration;
 using Xunit;
 using Xunit.Sdk;
 
@@ -27,8 +28,7 @@ namespace Dash.Tests.Infrastructure.Versioning
         [InlineData(FileVersionRepository.Headers)]
         public void Can_parse_empty_version_entries(string input)
         {
-            var stub = new FakeFileSystem(input);
-            var sut = new FileVersionRepository(stub);
+            var sut = new FileVersionRepository(FileSystem.CreateNull(A.File.WithContent(input)));
 
             var dashboardMetaEntries = sut.GetFileVersionList();
 
@@ -38,11 +38,14 @@ namespace Dash.Tests.Infrastructure.Versioning
         [Fact]
         public void Can_parse_version_entries()
         {
-            var stub = new FakeFileSystem(
-                $"{FileVersionRepository.Headers}\n" +
-                "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+            var sut = new FileVersionRepository(
+                FileSystem.CreateNull(
+                    A.File.WithContent(
+                        $"{FileVersionRepository.Headers}\n" +
+                        "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+                    )
+                )
             );
-            var sut = new FileVersionRepository(stub);
 
             var dashboardMetaEntries = sut.GetFileVersionList();
 
@@ -52,11 +55,14 @@ namespace Dash.Tests.Infrastructure.Versioning
         [Fact]
         public void Can_parse_dashboard_version_entry()
         {
-            var stub = new FakeFileSystem(
-                $"{FileVersionRepository.Headers}\n" +
-                "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+            var sut = new FileVersionRepository(
+                FileSystem.CreateNull(
+                    A.File.WithContent(
+                        $"{FileVersionRepository.Headers}\n" +
+                        "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+                    )
+                )
             );
-            var sut = new FileVersionRepository(stub);
 
             var result = sut.GetFileVersionList().FirstOrDefault();
 
@@ -77,8 +83,7 @@ namespace Dash.Tests.Infrastructure.Versioning
         [Fact]
         public void Can_add_new_file_version()
         {
-            var stub = new FakeFileSystem();
-            var sut = new FileVersionRepository(stub);
+            var sut = new FileVersionRepository(FileSystem.CreateNull(A.File.WithContent("")));
 
             var dummy = A.FileVersion
                 .WithEntry("dummy_entry")
@@ -96,11 +101,14 @@ namespace Dash.Tests.Infrastructure.Versioning
         [Fact]
         public void Can_overwrite_existing_file_version()
         {
-            var stub = new FakeFileSystem(
-                $"{FileVersionRepository.Headers}\n" +
-                "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+            var sut = new FileVersionRepository(
+                FileSystem.CreateNull(
+                    A.File.WithContent(
+                        $"{FileVersionRepository.Headers}\n" +
+                        "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+                    )
+                )
             );
-            var sut = new FileVersionRepository(stub);
 
             var dummy = A.FileVersion
                 .WithEntry("aws-account-billing.json")
@@ -118,11 +126,14 @@ namespace Dash.Tests.Infrastructure.Versioning
         [Fact]
         public void Can_remove_file_version()
         {
-            var stub = new FakeFileSystem(
-                $"{FileVersionRepository.Headers}\n" +
-                "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+            var sut = new FileVersionRepository(
+                FileSystem.CreateNull(
+                    A.File.WithContent(
+                        $"{FileVersionRepository.Headers}\n" +
+                        "aws-account-billing.json;24083c9fae5cdcd5f707584ce126b98cd1472281;rifisdfds;40063756+rifisdfds@users.noreply.github.com;2018-08-08 10:10:36 +0100;GitHub;noreply@github.com;2018-08-08 10:10:36 +0100;Sorted graph by cost. Changed period to 90 days"
+                    )
+                )
             );
-            var sut = new FileVersionRepository(stub);
 
             var dummy = A.FileVersion
                 .WithEntry("aws-account-billing.json")

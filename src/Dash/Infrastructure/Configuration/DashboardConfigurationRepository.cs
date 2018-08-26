@@ -10,16 +10,16 @@ namespace Dash.Infrastructure.Configuration
 
         private static readonly string[] MandatoryHeaders = {"Id", "Name", "Team"};
 
-        private readonly IFileSystem _fileSystem;
+        private readonly FileSystem _fileSystem;
 
-        public DashboardConfigurationRepository(IFileSystem fileSystem)
+        public DashboardConfigurationRepository(FileSystem fileSystem)
         {
             _fileSystem = fileSystem;
         }
 
         public IEnumerable<DashboardConfiguration> GetAll()
         {
-            var lines = _fileSystem.ReadLines(DashboardConfigurationFileName);
+            var lines = _fileSystem.GetFile(DashboardConfigurationFileName).ReadLines();
             return ParseDashboardSettings(lines);
         }
 
@@ -58,19 +58,19 @@ namespace Dash.Infrastructure.Configuration
             }
         }
 
-        private static IEnumerable<(string environment, bool enabled)> BuildEnvironmentMap(IEnumerable<string> items, string[] environments)
+        private static IEnumerable<Environment> BuildEnvironmentMap(IEnumerable<string> items, string[] environments)
         {
             var i = 0;
 
             foreach (var item in items)
             {
-                yield return (environment: environments[i], enabled: item == "x");
+                yield return new EnvironmentBuilder().WithName(environments[i]).WithState(item == "x" ? EnvironmentState.Enabled : EnvironmentState.Disabled);
                 i++;
             }
 
             while (i < environments.Length)
             {
-                yield return (environment: environments[i], enabled: false);
+                yield return new EnvironmentBuilder().WithName(environments[i]);
                 i++;
             }
         }
@@ -91,7 +91,7 @@ namespace Dash.Infrastructure.Configuration
                 dashboardConfigurations.Add(dashboardConfiguration);
             }
 
-            _fileSystem.WriteLines(DashboardConfigurationFileName, CreateMarkdownTable(dashboardConfigurations));
+            _fileSystem.GetFile(DashboardConfigurationFileName).WriteLines(CreateMarkdownTable(dashboardConfigurations));
         }
 
         private static IEnumerable<string> CreateMarkdownTable(List<DashboardConfiguration> dashboardConfigurations)
@@ -118,7 +118,7 @@ namespace Dash.Infrastructure.Configuration
             }
 
             var tempList = MandatoryHeaders.ToList();
-            tempList.AddRange(configuration.Environments.Select(x => x.environment));
+            tempList.AddRange(configuration.Environments.Select(x => x.Name));
 
             return tempList.ToArray();
         }
@@ -131,7 +131,7 @@ namespace Dash.Infrastructure.Configuration
 
             foreach (var environment in dashboardConfiguration.Environments)
             {
-                yield return environment.enabled ? "x" : "";
+                yield return environment.Enabled==EnvironmentState.Enabled ? "x" : "";
             }
         }
 
@@ -144,7 +144,7 @@ namespace Dash.Infrastructure.Configuration
             if (index != -1)
             {
                 dashboardConfigurations.RemoveAt(index);
-                _fileSystem.WriteLines(DashboardConfigurationFileName, CreateMarkdownTable(dashboardConfigurations));
+                _fileSystem.GetFile(DashboardConfigurationFileName).WriteLines(CreateMarkdownTable(dashboardConfigurations));
                 return true;
             }
 

@@ -11,9 +11,9 @@ namespace Dash.Domain
     {
         private readonly FileVersionRepository _fileVersionRepository;
         private readonly DashboardConfigurationRepository _dashboardConfigurationRepository;
-        private readonly IFileSystem _fileSystem;
+        private readonly FileSystem _fileSystem;
 
-        public DashboardService(FileVersionRepository fileVersionRepository, DashboardConfigurationRepository dashboardConfigurationRepository, IFileSystem fileSystem)
+        public DashboardService(FileVersionRepository fileVersionRepository, DashboardConfigurationRepository dashboardConfigurationRepository, FileSystem fileSystem)
         {
             _fileVersionRepository = fileVersionRepository;
             _dashboardConfigurationRepository = dashboardConfigurationRepository;
@@ -52,7 +52,7 @@ namespace Dash.Domain
                     .WithCommitMessage(version.Message)
                     .WithCommitter(committer)
                     .WithAuthor(author);
-                var content = _fileSystem.ReadAllText(version.Entry);
+                var content = _fileSystem.GetFile(version.Entry).ReadAllText();
 
                 yield return new DashboardBuilder()
                     .WithId(settings.Id)
@@ -75,7 +75,7 @@ namespace Dash.Domain
 
         private void SaveContent(Dashboard dashboard)
         {
-            _fileSystem.WriteAllText(dashboard.Name, dashboard.Content);
+            _fileSystem.GetFile(dashboard.Name).WriteAllText(dashboard.Content);
         }
 
         private void SaveFileVersion(Dashboard dashboard)
