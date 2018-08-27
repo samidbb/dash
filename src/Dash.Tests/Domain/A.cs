@@ -10,5 +10,6 @@ namespace Dash.Tests.Domain
         public static DashboardServiceBuilder DashboardService => new DashboardServiceBuilder();
         public static DashboardConfigurationRepositoryBuilder DashboardConfigurationRepository => new DashboardConfigurationRepositoryBuilder();
         public static FileVersionRepositoryBuilder FileVersionRepository => new FileVersionRepositoryBuilder();
+        public static FileVersionParserBuilder FileVersionParser => new FileVersionParserBuilder();
     }
 }

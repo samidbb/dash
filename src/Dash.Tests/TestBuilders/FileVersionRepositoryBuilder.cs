@@ -5,17 +5,17 @@ namespace Dash.Tests.TestBuilders
 {
     internal class FileVersionRepositoryBuilder
     {
-        private FileSystem _fileSystem = FileSystem.CreateNull();
+        private FileVersionParser _fileVersionParser = FileVersionParser.CreateNull();
 
-        public FileVersionRepositoryBuilder With(FileSystem fileSystem)
+        public FileVersionRepositoryBuilder With(FileVersionParser fileVersionParser)
         {
-            _fileSystem = fileSystem;
+            _fileVersionParser = fileVersionParser;
             return this;
         }
 
         public FileVersionRepository Build()
         {
-            return new FileVersionRepository(_fileSystem);
+            return new FileVersionRepository(_fileVersionParser);
         }
 
         public static implicit operator FileVersionRepository(FileVersionRepositoryBuilder builder)

@@ -35,6 +35,7 @@ namespace Dash
 
             services.AddTransient<FileSystem>();
             services.AddTransient<DashboardService>();
+            services.AddTransient<FileVersionParser>();
             services.AddTransient<FileVersionRepository>();
             services.AddTransient<DashboardConfigurationRepository>();
 

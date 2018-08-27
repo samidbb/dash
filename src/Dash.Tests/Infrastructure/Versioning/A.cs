@@ -8,5 +8,6 @@ namespace Dash.Tests.Infrastructure.Versioning
         public static FileVersionBuilder FileVersion => new FileVersionBuilder();
         public static FakeFileBuilder File => new FakeFileBuilder();
         public static FileVersionRepositoryBuilder FileVersionRepository => new FileVersionRepositoryBuilder();
+        public static FileVersionParserBuilder FileVersionParser => new FileVersionParserBuilder();
     }
 }

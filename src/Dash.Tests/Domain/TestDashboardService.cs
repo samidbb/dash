@@ -11,10 +11,11 @@ namespace Dash.Tests.Domain
         public void Can_build_dashboard_from_sources()
         {
             var sut = A.DashboardService
-                .With(A.FileVersionRepository.With(FileSystem.CreateNull(A.File.WithContent(
-                        $"{FileVersionRepository.Headers}\n" +
+                .With(A.FileVersionRepository.With(
+                    A.FileVersionParser.With(FileSystem.CreateNull(A.File.WithContent(
+                        $"{FileVersionParser.Headers}\n" +
                         "e;h;an;ae;2018-08-08 10:10:36 +0100;cn;ce;2018-08-08 10:10:36 +0100;m"
-                    )))
+                    ))))
                 )
                 .With(A.DashboardConfigurationRepository
                     .With(FileSystem.CreateNull(
