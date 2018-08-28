@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Dash.Infrastructure;
 using Dash.Infrastructure.Configuration;
 using Dash.Tests.TestHelpers;
@@ -14,11 +15,24 @@ namespace Dash.Tests.Infrastructure.Configuration
             // TODO -- inject filename from settings
             Assert.Equal("DASHBOARDS.md", DashboardConfigurationRepository.DashboardConfigurationFileName);
         }
-        
+
         [Theory]
-        [InlineData("", 0)]
-        [InlineData("|Id|Name|Team", 0)]
-        [InlineData("|Id|Name|Team|Env1|Env2|Env3|", 0)]
+        [InlineData("")]
+        [InlineData("|Id|Name")]
+        [InlineData("|Id|Name|Team|")]
+        [InlineData("|Id|Name|Team|Env1|Env2|Env3|")]
+        [InlineData("|Id|Name|\n|-|-|\n|A|B|")]
+        public void Throws_on_bad_formatted_header(string input)
+        {
+            
+            var sut = A.DashboardConfigurationRepository.With(
+                FileSystem.CreateNull(A.File.WithContent(input))
+            ).Build();
+
+            Assert.Throws<Exception>(() => sut.GetAll());
+        }
+
+        [Theory]
         [InlineData("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n", 0)]
         [InlineData("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|Id1|Name1|Team1||||", 1)]
         [InlineData("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n|Id1|Name1|Team1||||\n|Id2|Name2|Team2||||", 2)]
@@ -57,9 +71,9 @@ namespace Dash.Tests.Infrastructure.Configuration
         }
 
         [Fact]
-        public void Can_add_new_dashboard()
+        public void Can_add_new_dashboard_with_environments()
         {
-            var file = A.File.WithContent("").Build();
+            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n").Build();
             var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
 
             var dashboardConfiguration = A.DashboardConfiguration
@@ -78,9 +92,47 @@ namespace Dash.Tests.Infrastructure.Configuration
         }
 
         [Fact]
+        public void Can_add_new_dashboard_without_environments()
+        {
+            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|-|-|-|\n").Build();
+            var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
+
+            var dashboardConfiguration = A.DashboardConfiguration
+                .WithId("NewId")
+                .WithName("NewName")
+                .WithTeam("NewTeam")
+                .Build();
+
+            sut.Save(dashboardConfiguration);
+
+            Assert.Equal("|Id|Name|Team|\n|-|-|-|\n|NewId|NewName|NewTeam|", file.Content);
+        }
+
+        [Fact]
+        public void Can_add_new_dashboard_with_new_environments()
+        {
+            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|-|-|-|\n|Id1|Name1|Team1|x|x||").Build();
+            var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
+
+            var dashboardConfiguration = A.DashboardConfiguration
+                .WithId("NewId")
+                .WithName("NewName")
+                .WithTeam("NewTeam")
+                .WithEnvironments(
+                    A.Environment.WithName("NewEnvironment1").WithState(EnvironmentState.Disabled),
+                    A.Environment.WithName("NewEnvironment2").WithState(EnvironmentState.Enabled)
+                )
+                .Build();
+
+            sut.Save(dashboardConfiguration);
+
+            Assert.Equal("|Id|Name|Team|Env1|Env2|Env3|NewEnvironment1|NewEnvironment2|\n|-|-|-|-|-|-|-|-|\n|Id1|Name1|Team1|x|x||||\n|NewId|NewName|NewTeam|||||x|", file.Content);
+        }
+
+        [Fact]
         public void Can_replace_existing_dashboard()
         {
-            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|\n|:--|:-:|--:|\n|ExistingId|Name1|Team1|x|x||").Build();
+            var file = A.File.WithContent("|Id|Name|Team|Env1|Env2|Env3|NewEnvironment|\n|-|-|-|\n|ExistingId|Name1|Team1|x|x|||").Build();
             var sut = A.DashboardConfigurationRepository.With(FileSystem.CreateNull(file)).Build();
 
             var dashboardConfiguration = A.DashboardConfiguration
@@ -109,8 +161,8 @@ namespace Dash.Tests.Infrastructure.Configuration
                 .WithName("NewName")
                 .WithTeam("NewTeam")
                 .WithEnvironments(
-                    A.Environment.WithName("Env1"), 
-                    A.Environment.WithName("Env2"), 
+                    A.Environment.WithName("Env1"),
+                    A.Environment.WithName("Env2"),
                     A.Environment.WithName("Env3").WithState(EnvironmentState.Enabled))
                 .Build();
 
