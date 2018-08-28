@@ -4,6 +4,8 @@ namespace Dash.Domain
 {
     public class Signature
     {
+        public static readonly Signature Empty = new SignatureBuilder();
+
         public Signature(string name, string email, DateTime date)
         {
             Name = name;
@@ -18,7 +20,9 @@ namespace Dash.Domain
 
     public class SignatureBuilder
     {
-        private string _name;
+        private string _name = string.Empty;
+        private string _email = string.Empty;
+        private DateTime _date = DateTime.MinValue;
 
         public SignatureBuilder WithName(string name)
         {
@@ -26,15 +30,11 @@ namespace Dash.Domain
             return this;
         }
 
-        private string _email;
-
         public SignatureBuilder WithEmail(string email)
         {
             _email = email;
             return this;
         }
-
-        private DateTime _date;
 
         public SignatureBuilder WithDate(DateTime date)
         {

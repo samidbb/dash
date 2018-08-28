@@ -2,6 +2,8 @@
 {
     public class DashboardMeta
     {
+        public static readonly DashboardMeta Empty = new DashboardMetaBuilder();
+
         public DashboardMeta(string commit, string commitMessage, Signature committer, Signature author)
         {
             Commit = commit;
@@ -18,7 +20,10 @@
 
     public class DashboardMetaBuilder
     {
-        private string _commit;
+        private string _commit = string.Empty;
+        private string _commitMessage = string.Empty;
+        private Signature _committer = Signature.Empty;
+        private Signature _author = Signature.Empty;
 
         public DashboardMetaBuilder WithCommit(string commit)
         {
@@ -26,23 +31,17 @@
             return this;
         }
 
-        private string _commitMessage;
-
         public DashboardMetaBuilder WithCommitMessage(string commitMessage)
         {
             _commitMessage = commitMessage;
             return this;
         }
 
-        private Signature _committer;
-
         public DashboardMetaBuilder WithCommitter(Signature committer)
         {
             _committer = committer;
             return this;
         }
-
-        private Signature _author;
 
         public DashboardMetaBuilder WithAuthor(Signature author)
         {

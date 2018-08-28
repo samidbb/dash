@@ -121,14 +121,12 @@ namespace Dash.Features.Dashboards
 
             _dashboardService.Save(dashboard);
 
-            var details = new DashboardDetails
-            {
-                Id = dashboard.Id,
-                Name = dashboard.Name,
-                Team = dashboard.Team,
-                LastModified = dashboard.LastModified,
-                Content = dashboard.Content.ToString()
-            };
+            var details = new DashboardDetails();
+            details.Id = dashboard.Id;
+            details.Name = dashboard.Name;
+            details.Team = dashboard.Team;
+            details.LastModified = dashboard.LastModified;
+            details.Content = dashboard.Content.ToString();
 
             return CreatedAtRoute(GetByIdRouteName, new {id = dashboard.Id}, details);
         }
