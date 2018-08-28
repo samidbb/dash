@@ -30,21 +30,29 @@ namespace Dash.Tests.Infrastructure.Configuration
         [InlineData("|a|b|c|\n|:--|:-:|--:|\n||||", "a|b|c\n")]
         public void Can_parse_markdown_table_to_csv(string testInput, string expectedOutput)
         {
-            var input = testInput.Split('\n');
+            string[] lines = testInput.Split('\n');
 
-            var lines = MarkdownParser.ParseFirstMarkdownTableAsCsvLines(input);
+            var result = MarkdownParser.ParseMarkdownTable(lines);
 
-            Assert.Equal(expectedOutput, string.Join('\n', lines.Select(x => string.Join('|', x))));
+            Assert.Equal(expectedOutput, string.Join('\n', result.Select(x => string.Join('|', x))));
         }
 
+        // JOIN string WITH '|' JOIN lines WITH '\n'
+
         [Theory]
-        [InlineData("a|b\n1|2", "|a|b|\n|-|-|\n|1|2|")]
-        [InlineData("a", "|a|\n|-|")]
-        [InlineData("a|b|c\n1|2|3", "|a|b|c|\n|-|-|-|\n|1|2|3|")]
-        [InlineData("a|b|c", "|a|b|c|\n|-|-|-|")]
-        public void Can_build_markdown_table_from_strings_of_strings(string input, string expectedOutput)
+        [InlineData("a|b", "1|2", "|a|b|\n|-|-|\n|1|2|")]
+        [InlineData("a", null, "|a|\n|-|")]
+        [InlineData("a|b|c", "1|2|3", "|a|b|c|\n|-|-|-|\n|1|2|3|")]
+        [InlineData("a|b|c", null, "|a|b|c|\n|-|-|-|")]
+        public void Can_build_markdown_table_from_strings_of_strings(string testHeader, string testLines, string expectedOutput)
         {
-            Assert.Equal(expectedOutput, string.Join('\n', MarkdownParser.BuildMarkdownTable(input.Split('\n').Select(x => x.Split('|')))));
+            string[] headers = testHeader.Split('|');
+            string[][] lines = testLines?.Split('\n').Select(x => x.Split('\n')).ToArray();
+            var markdownTable = new MarkdownTable(headers, lines);
+
+            var result = MarkdownParser.BuildMarkdownTable(markdownTable);
+
+            Assert.Equal(expectedOutput, string.Join('\n', result));
         }
     }
 }

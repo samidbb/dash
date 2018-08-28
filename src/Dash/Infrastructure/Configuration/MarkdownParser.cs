@@ -15,6 +15,31 @@ namespace Dash.Infrastructure.Configuration
 
         private static readonly Regex ColumnPattern = new Regex("^-+$", RegexOptions.Singleline);
 
+        public static MarkdownTable ParseMarkdownTable(IEnumerable<string> lines)
+        {
+            var rows = ParseFirstMarkdownTableAsCsvLines(lines);
+
+            var headersLength = 0;
+            var headers = new string[0];
+
+            var configurations = new List<string[]>();
+
+            foreach (var items in rows)
+            {
+                if (headersLength == 0)
+                {
+                    headers = items;
+
+                    headersLength = headers.Length;
+                    continue;
+                }
+
+                configurations.Add(items);
+            }
+
+            return new MarkdownTable(headers, configurations.ToArray());
+        }
+
         /*
          * Rule 1:
          * a) Each line of a paragraph block have to contain at least a column delimiter | that is not embedded by either a code inline (backstick `) or a HTML inline.
@@ -54,7 +79,7 @@ namespace Dash.Infrastructure.Configuration
          * Rule 10:
          * It is possible to have a single row header only
          */
-        public static IEnumerable<string[]> ParseFirstMarkdownTableAsCsvLines(IEnumerable<string> lines)
+        private static IEnumerable<string[]> ParseFirstMarkdownTableAsCsvLines(IEnumerable<string> lines)
         {
             using (var it = lines.GetEnumerator())
             {
@@ -119,7 +144,7 @@ namespace Dash.Infrastructure.Configuration
 
         private static string[] TrimAndSplit(string input)
         {
-            return input.Trim(' ', '\t', ColumnSeparator).Split('|');
+            return input.Trim(' ', '\t', ColumnSeparator).Split(ColumnSeparator);
         }
 
         /// <remarks>
@@ -140,15 +165,10 @@ namespace Dash.Infrastructure.Configuration
             return isColumnDelimiter ? columns.Length : 0;
         }
 
-        public static IEnumerable<string> BuildMarkdownTable(IEnumerable<string[]> input)
+        public static IEnumerable<string> BuildMarkdownTable(MarkdownTable markdownTable)
         {
-            string FormatOutput(string[] line)
-            {
-                return "|" + string.Join('|', line) + "|";
-            }
-
             var headerOutputted = false;
-            foreach (var line in input)
+            foreach (var line in markdownTable)
             {
                 yield return FormatOutput(line);
                 if (!headerOutputted)
@@ -158,5 +178,11 @@ namespace Dash.Infrastructure.Configuration
                 }
             }
         }
+
+        private static string FormatOutput(string[] line)
+        {
+            return ColumnSeparator + string.Join(ColumnSeparator, line) + ColumnSeparator;
+        }
+
     }
 }

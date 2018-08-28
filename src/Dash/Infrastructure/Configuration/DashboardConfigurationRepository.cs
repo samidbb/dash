@@ -19,43 +19,47 @@ namespace Dash.Infrastructure.Configuration
 
         public IEnumerable<DashboardConfiguration> GetAll()
         {
-            var lines = _fileSystem.GetFile(DashboardConfigurationFileName).ReadLines();
-            return ParseDashboardSettings(lines);
+            return GetStuff().Configurations;
         }
 
-        private static IEnumerable<DashboardConfiguration> ParseDashboardSettings(IEnumerable<string> lines)
+        private Stuff GetStuff()
         {
-            var rows = MarkdownParser.ParseFirstMarkdownTableAsCsvLines(lines);
+            var lines = _fileSystem.GetFile(DashboardConfigurationFileName).ReadLines();
 
-            var isHeaderOk = 0;
-            var environments = new string[0];
+            var markdownTable = MarkdownParser.ParseMarkdownTable(lines);
 
-            foreach (var items in rows)
+            if (!MandatoryHeaders.SequenceEqual(markdownTable.Headers.Take(3)))
             {
-                if (items.Length < MandatoryHeaders.Length)
-                {
-                    throw new Exception("Too few columns");
-                }
-
-                if (isHeaderOk == 0)
-                {
-                    if (!MandatoryHeaders.SequenceEqual(items.Take(3)))
-                    {
-                        throw new Exception("Headers do not match");
-                    }
-
-                    isHeaderOk = items.Length;
-                    environments = items.Skip(MandatoryHeaders.Length).ToArray();
-                    continue;
-                }
-
-                yield return new DashboardConfigurationBuilder()
-                        .WithId(items[0])
-                        .WithName(items[1])
-                        .WithTeam(items[2])
-                        .WithEnvironments(BuildEnvironmentMap(items.Skip(MandatoryHeaders.Length), environments).ToArray())
-                    ;
+                throw new Exception("Headers do not match");
             }
+
+            var environments = markdownTable.Headers.Skip(MandatoryHeaders.Length).ToArray();
+
+            var configurations = new List<DashboardConfiguration>();
+
+            foreach (var items in markdownTable.Lines)
+            {
+                configurations.Add(new DashboardConfigurationBuilder()
+                    .WithId(items[0])
+                    .WithName(items[1])
+                    .WithTeam(items[2])
+                    .WithEnvironments(BuildEnvironmentMap(items.Skip(MandatoryHeaders.Length), environments).ToArray()));
+            }
+
+
+            return new Stuff(environments, configurations);
+        }
+
+        public class Stuff
+        {
+            public Stuff(string[] environments, List<DashboardConfiguration> configurations)
+            {
+                Environments = environments;
+                Configurations = configurations;
+            }
+
+            public string[] Environments { get; }
+            public List<DashboardConfiguration> Configurations { get; }
         }
 
         private static IEnumerable<Environment> BuildEnvironmentMap(IEnumerable<string> items, string[] environments)
@@ -77,7 +81,8 @@ namespace Dash.Infrastructure.Configuration
 
         public void Save(DashboardConfiguration dashboardConfiguration)
         {
-            var dashboardConfigurations = GetAll().ToList();
+            var stuff = GetStuff();
+            var dashboardConfigurations = stuff.Configurations.ToList();
 
             var i = dashboardConfigurations.FindIndex(x => x.Id == dashboardConfiguration.Id);
             var newDashboardConfig = i == -1;
@@ -91,64 +96,95 @@ namespace Dash.Infrastructure.Configuration
                 dashboardConfigurations.Add(dashboardConfiguration);
             }
 
-            _fileSystem.GetFile(DashboardConfigurationFileName).WriteLines(CreateMarkdownTable(dashboardConfigurations));
-        }
+            var markdownTable = CreateMarkdownTable(
+                environments: MandatoryHeaders.Concat(stuff.Environments).ToArray(),
+                dashboardConfigurations: dashboardConfigurations);
 
-        private static IEnumerable<string> CreateMarkdownTable(List<DashboardConfiguration> dashboardConfigurations)
-        {
-            return MarkdownParser.BuildMarkdownTable(PrepareForMarkdown(dashboardConfigurations));
-        }
-
-        private static IEnumerable<string[]> PrepareForMarkdown(List<DashboardConfiguration> dashboardConfigurations)
-        {
-            yield return GetHeaders(dashboardConfigurations);
-
-            foreach (var dashboardConfiguration in dashboardConfigurations)
-            {
-                yield return GetLine(dashboardConfiguration).ToArray();
-            }
-        }
-
-        private static string[] GetHeaders(IEnumerable<DashboardConfiguration> dashboardConfigurations)
-        {
-            var configuration = dashboardConfigurations.FirstOrDefault();
-            if (configuration == null)
-            {
-                return MandatoryHeaders;
-            }
-
-            var tempList = MandatoryHeaders.ToList();
-            tempList.AddRange(configuration.Environments.Select(x => x.Name));
-
-            return tempList.ToArray();
-        }
-
-        private static IEnumerable<string> GetLine(DashboardConfiguration dashboardConfiguration)
-        {
-            yield return dashboardConfiguration.Id;
-            yield return dashboardConfiguration.Name;
-            yield return dashboardConfiguration.Team;
-
-            foreach (var environment in dashboardConfiguration.Environments)
-            {
-                yield return environment.Enabled==EnvironmentState.Enabled ? "x" : "";
-            }
+            _fileSystem.GetFile(DashboardConfigurationFileName).WriteLines(markdownTable);
         }
 
         public bool Remove(string id)
         {
-            var dashboardConfigurations = GetAll().ToList();
+            var stuff = GetStuff();
+            var dashboardConfigurations = stuff.Configurations.ToList();
 
             var index = dashboardConfigurations.FindIndex(x => x.Id == id);
 
             if (index != -1)
             {
                 dashboardConfigurations.RemoveAt(index);
-                _fileSystem.GetFile(DashboardConfigurationFileName).WriteLines(CreateMarkdownTable(dashboardConfigurations));
+
+                var markdownTable = CreateMarkdownTable(
+                    environments: MandatoryHeaders.Concat(stuff.Environments).ToArray(),
+                    dashboardConfigurations: dashboardConfigurations);
+                _fileSystem.GetFile(DashboardConfigurationFileName).WriteLines(markdownTable);
                 return true;
             }
 
             return false;
         }
+
+        #region Create lines from DashboardConfiguration
+
+        public static IEnumerable<string> CreateMarkdownTable(string[] environments, List<DashboardConfiguration> dashboardConfigurations)
+        {
+            var markdownTable = PrepareForMarkdown(environments, dashboardConfigurations);
+            return MarkdownParser.BuildMarkdownTable(markdownTable);
+        }
+
+        private static MarkdownTable PrepareForMarkdown(string[] environments, List<DashboardConfiguration> dashboardConfigurations)
+        {
+            var headers = GetHeaders(environments, dashboardConfigurations);
+
+            return new MarkdownTable(headers, GetLines(dashboardConfigurations, headers).ToArray());
+        }
+
+        private static string[] GetHeaders(string[] headerEnvironments, IEnumerable<DashboardConfiguration> dashboardConfigurations)
+        {
+            var actualEnvironments = new HashSet<string>(dashboardConfigurations.SelectMany(x => x.Environments).Select(x => x.Name));
+            if (actualEnvironments.Count == 0)
+            {
+                return MandatoryHeaders;
+            }
+
+            var tempList = MandatoryHeaders.ToList();
+
+            foreach (var environment in headerEnvironments)
+            {
+                if (actualEnvironments.Contains(environment))
+                {
+                    tempList.Add(environment);
+                }
+            }
+
+            actualEnvironments.ExceptWith(headerEnvironments);
+
+            tempList.AddRange(actualEnvironments.OrderBy(x => x));
+
+            return tempList.ToArray();
+        }
+
+        private static IEnumerable<string[]> GetLines(List<DashboardConfiguration> dashboardConfigurations, string[] headers)
+        {
+            foreach (var dashboardConfiguration in dashboardConfigurations)
+            {
+                yield return GetLine(headers, dashboardConfiguration).ToArray();
+            }
+        }
+
+        private static IEnumerable<string> GetLine(string[] headers, DashboardConfiguration dashboardConfiguration)
+        {
+            yield return dashboardConfiguration.Id;
+            yield return dashboardConfiguration.Name;
+            yield return dashboardConfiguration.Team;
+
+            foreach (var environment in headers.Skip(MandatoryHeaders.Length))
+            {
+                var env = dashboardConfiguration.Environments.FirstOrDefault(x => x.Name == environment);
+                yield return env?.Enabled == EnvironmentState.Enabled ? "x" : "";
+            }
+        }
+
+        #endregion
     }
 }
