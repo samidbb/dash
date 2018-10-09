@@ -23,7 +23,7 @@ spec:
           mountPath: "/scripts"
         - name: data
           mountPath: /data
-        command: [ "sh", "-c", "chmod +x /scripts/init_dashboard_version.sh && /scripts/init_dashboard_version.sh /data" ]
+        command: [ "sh", "-c", "tail -f /dev/null # DEBUG=1 /scripts/init_dashboard_version.sh /data" ]
       containers:
       - name: container
         image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/ded/dash:$(Build.BuildId)

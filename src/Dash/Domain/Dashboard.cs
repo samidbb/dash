@@ -65,7 +65,7 @@ namespace Dash.Domain
         private string _id;
         private string _name;
         private string _team;
-        private DashboardMeta _meta;
+        private DashboardMeta _meta = DashboardMeta.Empty;
         private Content _content = Content.Empty;
 
         public DashboardBuilder WithId(string id)
