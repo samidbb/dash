@@ -2,7 +2,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: dash
-  namespace: $(kubernetes-namespace)
 spec:
   replicas: 1
   selector:
@@ -23,7 +22,7 @@ spec:
           mountPath: "/scripts"
         - name: data
           mountPath: /data
-        command: [ "sh", "-c", "tail -f /dev/null # DEBUG=1 /scripts/init_dashboard_version.sh /data" ]
+        command: [ "sh", "-c", "/scripts/init_dashboard_version.sh /data" ]
       containers:
       - name: container
         image: 579478677147.dkr.ecr.eu-central-1.amazonaws.com/ded/dash:$(Build.BuildId)
@@ -42,5 +41,10 @@ spec:
       - name: init-script
         configMap:
           name: init-script
+          defaultMode: 484
+          items:
+          - key: init_dashboard_version.sh
+            path: init_dashboard_version.sh
       - name: data
         emptyDir: {}
+
